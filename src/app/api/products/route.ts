@@ -1,34 +1,40 @@
-// app/api/products/route.ts
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+export async function GET() {
+  const shopifyDomain = process.env.SHOPIFY_STORE_DOMAIN;
+  const shopifyToken = process.env.SHOPIFY_API_TOKEN;
 
-const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_API_TOKEN = process.env.SHOPIFY_API_TOKEN;
+  if (!shopifyDomain || !shopifyToken) {
+    return NextResponse.json(
+      { error: "Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN" },
+      { status: 500 }
+    );
+  }
 
-const query = `
-  {
-    products(first: 10) {
-      edges {
-        node {
-          id
-          title
-          description
-          handle
-          images(first: 1) {
-            edges {
-              node {
-                url
-                altText
+  const query = `
+    {
+      products(first: 10) {
+        edges {
+          node {
+            id
+            title
+            descriptionHtml
+            handle
+            images(first: 1) {
+              edges {
+                node {
+                  url
+                  altText
+                }
               }
             }
-          }
-          variants(first: 1) {
-            edges {
-              node {
-                price {
-                  amount
-                  currencyCode
+            variants(first: 1) {
+              edges {
+                node {
+                  price {
+                    amount
+                    currencyCode
+                  }
                 }
               }
             }
@@ -36,36 +42,31 @@ const query = `
         }
       }
     }
-  }
-`;
-
-export async function GET() {
-  if (!SHOPIFY_DOMAIN || !SHOPIFY_API_TOKEN) {
-    return NextResponse.json(
-      { error: "Missing SHOPIFY_STORE_DOMAIN or SHOPIFY_API_TOKEN" },
-      { status: 500 }
-    );
-  }
+  `;
 
   try {
-    const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2023-07/graphql.json`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": SHOPIFY_API_TOKEN,
-      },
-      body: JSON.stringify({ query }),
-      cache: "no-store",
-    });
+    const response = await fetch(
+      `https://${shopifyDomain}/api/2023-07/graphql.json`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Storefront-Access-Token": shopifyToken,
+        },
+        body: JSON.stringify({ query }),
+        cache: "no-store",
+      }
+    );
 
     if (!response.ok) {
-      const text = await response.text();
-      return NextResponse.json({ error: text }, { status: response.status });
+      const err = await response.text();
+      return NextResponse.json({ error: err }, { status: response.status });
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const result = await response.json();
+    // return kun produktlisten
+    return NextResponse.json(result.data.products.edges.map((e: any) => e.node));
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
