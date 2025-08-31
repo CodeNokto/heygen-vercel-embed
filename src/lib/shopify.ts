@@ -16,59 +16,53 @@ export type ShopifyProduct = {
 export async function fetchProducts(): Promise<ShopifyProduct[]> {
   const domain = process.env.SHOPIFY_STORE_DOMAIN;
   const token = process.env.SHOPIFY_API_TOKEN;
+  if (!domain || !token) throw new Error("Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN");
 
-  if (!domain || !token) {
-    throw new Error("Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN");
-  }
+  let products: ShopifyProduct[] = [];
+  let hasNextPage = true;
+  let cursor: string | null = null;
 
-  const query = `
-    {
-      products(first: 10) {
-        edges {
-          node {
-            id
-            title
-            descriptionHtml
-            handle
-            images(first: 1) {
-              edges {
-                node {
-                  url
-                  altText
-                }
-              }
+  while (hasNextPage) {
+    const query = `
+      {
+        products(first: 50, after: ${cursor ? `"${cursor}"` : null}) {
+          edges {
+            cursor
+            node {
+              id
+              title
+              descriptionHtml
+              handle
+              images(first: 1) { edges { node { url altText } } }
+              variants(first: 1) { edges { node { price { amount currencyCode } } } }
             }
-            variants(first: 1) {
-              edges {
-                node {
-                  price {
-                    amount
-                    currencyCode
-                  }
-                }
-              }
-            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
           }
         }
       }
-    }
-  `;
+    `;
 
-  const res = await fetch(`https://${domain}/api/${API_VERSION}/graphql.json`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": token,
-    },
-    body: JSON.stringify({ query }),
-    cache: "no-store",
-  });
+    const res = await fetch(`https://${domain}/api/${API_VERSION}/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": token,
+      },
+      body: JSON.stringify({ query }),
+    });
 
-  if (!res.ok) {
-    throw new Error((await res.text()) || `Shopify-respons: ${res.status}`);
+    if (!res.ok) throw new Error(await res.text());
+
+    const data = await res.json();
+    const edges = data?.data?.products?.edges ?? [];
+    products = products.concat(edges.map((e: any) => e.node));
+
+    hasNextPage = data?.data?.products?.pageInfo?.hasNextPage ?? false;
+    cursor = data?.data?.products?.pageInfo?.endCursor ?? null;
   }
 
-  const data = await res.json();
-  const edges = data?.data?.products?.edges ?? [];
-  return edges.map((e: any) => e.node as ShopifyProduct);
+  return products;
 }
