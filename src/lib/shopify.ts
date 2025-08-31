@@ -68,5 +68,6 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
     cursor = edges.length > 0 ? edges[edges.length - 1].cursor : null;
   }
 
+  console.log("Antall produkter hentet:", products.length);
   return products;
 }
