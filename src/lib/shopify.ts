@@ -49,4 +49,3 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
   const edges = data?.data?.products?.edges ?? [];
   return edges.map((e: any) => e.node as ShopifyProduct);
 }
-'@ | Out-File -Encoding utf8 -Force src\lib\shopify.ts
