@@ -19,27 +19,30 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
   if (!domain || !token) throw new Error("Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN");
 
   let products: ShopifyProduct[] = [];
-  let hasNextPage = true;
   let cursor: string | null = null;
+  let hasNextPage = true;
 
   while (hasNextPage) {
-    const query = `
+    const query: string = `
       {
         products(first: 50, after: ${cursor ? `"${cursor}"` : null}) {
           edges {
-            cursor
             node {
               id
               title
               descriptionHtml
               handle
-              images(first: 1) { edges { node { url altText } } }
-              variants(first: 1) { edges { node { price { amount currencyCode } } } }
+              images(first: 1) {
+                edges { node { url altText } }
+              }
+              variants(first: 1) {
+                edges { node { price { amount currencyCode } } }
+              }
             }
+            cursor
           }
           pageInfo {
             hasNextPage
-            endCursor
           }
         }
       }
@@ -52,16 +55,17 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
         "X-Shopify-Storefront-Access-Token": token,
       },
       body: JSON.stringify({ query }),
+      cache: "no-store",
     });
 
-    if (!res.ok) throw new Error(await res.text());
-
+    if (!res.ok) throw new Error((await res.text()) || `Shopify-respons: ${res.status}`);
     const data = await res.json();
+
     const edges = data?.data?.products?.edges ?? [];
-    products = products.concat(edges.map((e: any) => e.node));
+    products.push(...edges.map((e: any) => e.node as ShopifyProduct));
 
     hasNextPage = data?.data?.products?.pageInfo?.hasNextPage ?? false;
-    cursor = data?.data?.products?.pageInfo?.endCursor ?? null;
+    cursor = edges.length > 0 ? edges[edges.length - 1].cursor : null;
   }
 
   return products;
