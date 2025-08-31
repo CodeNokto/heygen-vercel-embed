@@ -1,23 +1,24 @@
-// src/app/api/products/route.ts
-import { NextResponse } from "next/server";
+// src/app/products-view/page.tsx
+import React from "react";
 
-export async function GET() {
-  const shop = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_API_TOKEN;
-
-  const url = `https://${shop}/admin/api/2024-01/products.json`;
-
-  const res = await fetch(url, {
-    headers: {
-      "X-Shopify-Access-Token": token!,
-      "Content-Type": "application/json",
-    },
+export default async function ProductsPage() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
+    cache: "no-store",
   });
+  const data = await res.json();
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "Shopify API request failed" }, { status: res.status });
+  if (!data.products) {
+    return <main><p>Ingen produkter funnet.</p></main>;
   }
 
-  const data = await res.json();
-  return NextResponse.json(data);
+  return (
+    <main style={{ padding: "2rem", fontSize: "1.2rem", lineHeight: "1.6" }}>
+      <h1>Produktoversikt</h1>
+      <pre style={{ whiteSpace: "pre-wrap" }}>
+        {data.products.map((p: any, idx: number) => (
+          `${idx + 1}. ${p.title}\n${p.body_html?.replace(/<[^>]*>?/gm, "")}\n\n`
+        )).join("")}
+      </pre>
+    </main>
+  );
 }
