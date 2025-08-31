@@ -1,40 +1,28 @@
-import React from "react";
+import { fetchProducts } from "@/lib/shopify";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function ProductsPage() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`, {
-    cache: "no-store",
-  });
-  const products = await res.json();
-
-  if (!products || products.length === 0) {
-    return <div>Ingen produkter funnet.</div>;
-  }
+  const products = await fetchProducts();
+  if (!products?.length) return <div>Ingen produkter funnet.</div>;
 
   return (
-    <div>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
       <h1>Produkter</h1>
-      <ul>
-        {products.map((p: any) => (
-          <li key={p.id}>
-            <h2>{p.title}</h2>
-            {p.images?.edges?.[0]?.node?.url && (
-              <img
-                src={p.images.edges[0].node.url}
-                alt={p.images.edges[0].node.altText || p.title}
-                width={200}
-              />
-            )}
-            <div
-              dangerouslySetInnerHTML={{ __html: p.descriptionHtml }}
-            />
-            {p.variants?.edges?.[0]?.node?.price && (
-              <p>
-                Pris: {p.variants.edges[0].node.price.amount}{" "}
-                {p.variants.edges[0].node.price.currencyCode}
-              </p>
-            )}
-          </li>
-        ))}
+      <ul style={{ listStyle: "none", padding: 0 }}>
+        {products.map((p) => {
+          const img = p.images?.edges?.[0]?.node;
+          const price = p.variants?.edges?.[0]?.node?.price;
+          return (
+            <li key={p.id} style={{ borderBottom: "1px solid #ddd", padding: "16px 0" }}>
+              <h2 style={{ margin: "0 0 8px" }}>{p.title}</h2>
+              {img?.url && <img src={img.url} alt={img.altText || p.title} width={240} height={240} style={{ objectFit: "cover", borderRadius: 8 }} />}
+              <div style={{ marginTop: 12 }} dangerouslySetInnerHTML={{ __html: p.descriptionHtml }} />
+              {price && <p style={{ marginTop: 8 }}>Pris: {price.amount} {price.currencyCode}</p>}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
