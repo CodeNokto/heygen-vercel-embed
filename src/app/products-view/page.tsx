@@ -1,5 +1,4 @@
-﻿
-import { fetchProducts } from "../../lib/shopify";
+﻿import { fetchProducts } from "../../lib/shopify";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,7 +15,10 @@ export default async function ProductsPage() {
           const img = p.images?.edges?.[0]?.node;
           const price = p.variants?.edges?.[0]?.node?.price;
           return (
-            <li key={p.id} style={{ borderBottom: "1px solid #ddd", padding: "16px 0" }}>
+            <li
+              key={p.id}
+              style={{ borderBottom: "1px solid #ddd", padding: "16px 0" }}
+            >
               <h2 style={{ margin: "0 0 8px" }}>{p.title}</h2>
               {img?.url && (
                 <img
@@ -27,8 +29,15 @@ export default async function ProductsPage() {
                   style={{ objectFit: "cover", borderRadius: 8 }}
                 />
               )}
-              <div style={{ marginTop: 12 }} dangerouslySetInnerHTML={{ __html: p.descriptionHtml }} />
-              {price && <p style={{ marginTop: 8 }}>Pris: {price.amount} {price.currencyCode}</p>}
+              <div
+                style={{ marginTop: 12 }}
+                dangerouslySetInnerHTML={{ __html: p.descriptionHtml }}
+              />
+              {price && (
+                <p style={{ marginTop: 8 }}>
+                  Pris: {price.amount} {price.currencyCode}
+                </p>
+              )}
             </li>
           );
         })}
@@ -36,4 +45,3 @@ export default async function ProductsPage() {
     </div>
   );
 }
-
