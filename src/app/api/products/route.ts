@@ -1,10 +1,11 @@
 // app/api/products/route.ts
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_API_TOKEN = process.env.SHOPIFY_API_TOKEN;
 
-// GraphQL-spørring (hent tilpasset felter du trenger)
 const query = `
   {
     products(first: 10) {
