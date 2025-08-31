@@ -1,4 +1,4 @@
-// src/lib/shopify.ts
+@'
 const API_VERSION = "2023-07";
 
 type ShopifyPrice = { amount: string; currencyCode: string };
@@ -16,10 +16,7 @@ export type ShopifyProduct = {
 export async function fetchProducts(): Promise<ShopifyProduct[]> {
   const domain = process.env.SHOPIFY_STORE_DOMAIN;
   const token = process.env.SHOPIFY_API_TOKEN;
-
-  if (!domain || !token) {
-    throw new Error("Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN");
-  }
+  if (!domain || !token) throw new Error("Mangler SHOPIFY_STORE_DOMAIN eller SHOPIFY_API_TOKEN");
 
   const query = `
     {
@@ -38,23 +35,19 @@ export async function fetchProducts(): Promise<ShopifyProduct[]> {
     }
   `;
 
-  const res = await fetch(`https://${domain}/api/${API_VERSION}/graphql.json`, {
+  const res = await fetch(\`https://${domain}/api/${API_VERSION}/graphql.json\`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Shopify-Storefront-Access-Token": token,
     },
     body: JSON.stringify({ query }),
-    // Vercel: ikke cache – alltid ferskt fra Shopify
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || `Shopify-respons: ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error((await res.text()) || \`Shopify-respons: \${res.status}\`);
   const data = await res.json();
   const edges = data?.data?.products?.edges ?? [];
   return edges.map((e: any) => e.node as ShopifyProduct);
 }
+'@ | Out-File -Encoding utf8 -Force src\lib\shopify.ts

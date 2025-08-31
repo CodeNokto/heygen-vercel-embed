@@ -1,5 +1,6 @@
+@'
 import { NextResponse } from "next/server";
-import { fetchProducts } from "@/lib/shopify";
+import { fetchProducts } from "../../../lib/shopify";
 
 export const runtime = "nodejs";
 
@@ -11,3 +12,4 @@ export async function GET() {
     return NextResponse.json({ error: e.message ?? "Ukjent feil" }, { status: 500 });
   }
 }
+'@ | Out-File -Encoding utf8 -Force src\app\api\products\route.ts
