@@ -36,5 +36,4 @@ export default async function ProductsPage() {
     </div>
   );
 }
-'@ | Out-File -Encoding utf8 -Force src\app\products-view\page.tsx
 

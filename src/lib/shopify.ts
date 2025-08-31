@@ -1,4 +1,3 @@
-@'
 const API_VERSION = "2023-07";
 
 type ShopifyPrice = { amount: string; currencyCode: string };
