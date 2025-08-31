@@ -1,22 +1,70 @@
+// app/api/products/route.ts
 import { NextResponse } from "next/server";
 
+const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_API_TOKEN = process.env.SHOPIFY_API_TOKEN;
+
+// GraphQL-spørring (hent tilpasset felter du trenger)
+const query = `
+  {
+    products(first: 10) {
+      edges {
+        node {
+          id
+          title
+          description
+          handle
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+              }
+            }
+          }
+          variants(first: 1) {
+            edges {
+              node {
+                price {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export async function GET() {
-  const shop = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_API_TOKEN;
-
-  const url = `https://${shop}/admin/api/2024-01/products.json`;
-
-  const res = await fetch(url, {
-    headers: {
-      "X-Shopify-Access-Token": token!,
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    return NextResponse.json({ error: "Shopify API request failed" }, { status: res.status });
+  if (!SHOPIFY_DOMAIN || !SHOPIFY_API_TOKEN) {
+    return NextResponse.json(
+      { error: "Missing SHOPIFY_STORE_DOMAIN or SHOPIFY_API_TOKEN" },
+      { status: 500 }
+    );
   }
 
-  const data = await res.json();
-  return NextResponse.json(data);
+  try {
+    const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2023-07/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": SHOPIFY_API_TOKEN,
+      },
+      body: JSON.stringify({ query }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return NextResponse.json({ error: text }, { status: response.status });
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
