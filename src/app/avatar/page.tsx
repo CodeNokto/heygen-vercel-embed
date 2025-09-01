@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { StreamingAvatar, StreamingEvents } from "@heygen/streaming-avatar";
+import StreamingAvatar, { StreamingEvents } from "@heygen/streaming-avatar";
 
 export default function AvatarPage() {
   const avatarRef = useRef<StreamingAvatar | null>(null);
