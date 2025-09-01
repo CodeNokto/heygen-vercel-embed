@@ -9,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@heygen/streaming-avatar": "^2.0.16",
+    "@heygen/streaming-avatar": "2.0.16",
     "@vercel/speed-insights": "^1.2.0",
     "livekit-client": "^2.15.6",
     "next": "^14.2.32",
