@@ -7,33 +7,29 @@ export default function AvatarPage() {
   const avatarRef = useRef<StreamingAvatar | null>(null);
 
   useEffect(() => {
-    async function init() {
-      const tokenRes = await fetch("/api/heygen-token"); 
-      const { token } = await tokenRes.json();
-
-      const avatar = new StreamingAvatar(token, {
-        container: document.getElementById("avatar-container")!,
-        avatarName: "default", // evt. ID du har i HeyGen
-        voice: "en-US-Neural2-J", // kan endres
+    if (!avatarRef.current) {
+      avatarRef.current = new StreamingAvatar({
+        token: async () => {
+          const resp = await fetch("/api/token");
+          const data = await resp.json();
+          return data.token;
+        },
       });
 
-      avatar.on(StreamingEvents.READY, () => {
-        console.log("Avatar klar");
-        avatar.speak("Hei, jeg er din AI-assistent. Hva kan jeg hjelpe deg med?");
+      avatarRef.current.on(StreamingEvents.AVATAR_START, () => {
+        console.log("Avatar startet");
       });
 
-      avatarRef.current = avatar;
+      avatarRef.current.on(StreamingEvents.AVATAR_STOP, () => {
+        console.log("Avatar stoppet");
+      });
     }
-    init();
   }, []);
 
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
-      <h1>Avatar</h1>
-      <div
-        id="avatar-container"
-        style={{ width: "100%", height: "600px", background: "#000" }}
-      ></div>
-    </main>
+    <div>
+      <h1>Live Avatar</h1>
+      <div id="avatar-container" style={{ width: "640px", height: "480px" }} />
+    </div>
   );
 }
