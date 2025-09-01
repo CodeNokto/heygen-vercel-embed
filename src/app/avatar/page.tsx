@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import StreamingAvatar, { StreamingEvents } from "@heygen/streaming-avatar";
+import StreamingAvatar from "@heygen/streaming-avatar";
 
 export default function AvatarPage() {
-  const avatarRef = useRef<StreamingAvatar | null>(null);
+  const avatarRef = useRef<any>(null);
 
   useEffect(() => {
     if (!avatarRef.current) {
@@ -16,11 +16,11 @@ export default function AvatarPage() {
         },
       });
 
-      avatarRef.current.on(StreamingEvents.AVATAR_START, () => {
+      avatarRef.current.on("avatar_start", () => {
         console.log("Avatar startet");
       });
 
-      avatarRef.current.on(StreamingEvents.AVATAR_STOP, () => {
+      avatarRef.current.on("avatar_stop", () => {
         console.log("Avatar stoppet");
       });
     }
